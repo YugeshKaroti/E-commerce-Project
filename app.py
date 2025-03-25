@@ -2,9 +2,18 @@ from module.conn import get_conn, run_query
 
 import streamlit as st, plotly.express as px, plotly.graph_objects as go
 
+import logging
+
+logging.basicConfig(filename = "app.log", format = "%(asctime)s %(levelname)s %(module)s %(lineno)d %(message)s",
+                    datefmt = "%Y-%m-%d %H:%M:%S",level = logging.INFO)
+
+logging.info("Started Streamlit Application")
+
 st.sidebar.title(":red[E - Commerce Analytics]")
 
 option = st.sidebar.radio("Select Dashboard", ["Customer Insights", "Sales Analytics", "Seller Performance", "Product Analytics"])
+
+logging.info(f"Selected {option} option")
 
 #st.image(r"C:\Users\yuges\OneDrive\Pictures\Screenshots\AdobeStock_223290240-1-scaled.jpeg")
 
@@ -13,6 +22,8 @@ if option == "Sales Analytics":
     st.title(":blue[Sales Performance Overview]")
 
     type = st.selectbox("Analysis Type ?", ("Please Select","Data mart", "Aggregration tables", "KPI"))
+
+    logging.info(f"Selected {type} in {option}")
 
 
     if type == "Data mart":
@@ -57,6 +68,8 @@ if option == "Sales Analytics":
 
         st.plotly_chart(fig)
 
+        logging.debug("Completed Data mart in Sales Analytics")
+
 
     if type == "Aggregration tables":
 
@@ -68,6 +81,8 @@ if option == "Sales Analytics":
         st.subheader("Daily Sales Summary Table")
 
         st.table(sales_table)
+
+        logging.debug("Completed Aggregration tables in Sales Analytics")
 
     if type == "KPI":
          query = '''select round(sum(total_price),2) as actual_price from dim_orders;'''
@@ -86,10 +101,14 @@ if option == "Sales Analytics":
 
          st.plotly_chart(fig)
 
+         logging.debug("Completed KPI in Sales Analytics")
+
 elif option == "Customer Insights":
     st.title(":green[Customer Insights Dashboard]")
 
     type = st.selectbox("Analysis Type ?", ("Please Select","Data mart", "Aggregration tables", "KPI"))
+
+    logging.info(f"Selected {type} in {option}")
 
     if type == "Data mart":
 
@@ -114,6 +133,8 @@ elif option == "Customer Insights":
 
         st.plotly_chart(fig)
 
+        logging.debug("Completed Data mart in Customer Insights")
+
     elif type == "Aggregration tables":
         query = ''' select c.customer_id as `Customer ID`, count(distinct(o.order_id)) as `Total Orders`, sum(f.product_price) as `Total Spent`, avg(f.product_price) as `Average order value`,
         max(o.order_purchase_timestamp) as `Last Purchase Date` from dim_customers c inner join fact_main f on c.customer_id = f.customer_id
@@ -124,6 +145,8 @@ elif option == "Customer Insights":
         st.subheader("Customer Purchase Behaviour Table")
 
         st.table(customer_behaviour)
+
+        logging.debug("Completed Aggregration tables in Customer Insights")
 
     elif type == "KPI":
         query = '''select round(sum(total_price) / count(distinct(order_id)), 2) as avg_order_value from dim_orders;'''
@@ -142,11 +165,15 @@ elif option == "Customer Insights":
 
         st.plotly_chart(fig)
 
+        logging.debug("Completed KPI in Customer Insights")
+
 elif option == "Seller Performance":
 
     st.title(":orange[Seller Performance Overview]")
 
     type = st.selectbox("Analysis Type ?", ("Please Select","Data mart", "Aggregration tables", "KPI"))
+
+    logging.info(f"Selected {type} in {option}")
 
     if type == "Data mart":
 
@@ -168,6 +195,8 @@ elif option == "Seller Performance":
 
         st.plotly_chart(fig)
 
+        logging.debug("Completed Data mart in {option}")
+
     elif type == "Aggregration tables":
         query = '''select s.seller_id as `Seller ID`, count(distinct(o.order_id)) as `Total Orders`, sum(o.total_price) as `Total Revenue`, round(avg(datediff(o.order_estimated_delivery_date, o.order_approved_at)))
         as `Average Delivery Time` from dim_sellers s inner join fact_main f on s.seller_id = f.seller_id inner join dim_orders o on f.order_id = o.order_id where o.order_estimated_delivery_date is not null
@@ -178,6 +207,8 @@ elif option == "Seller Performance":
         st.subheader("Seller Performance Table")
 
         st.table(seller_perf)
+
+        logging.debug("Completed Aggregration Tables in {option}")
 
     elif type == "KPI":
         query = '''select s.seller_id as `Seller ID`, round(avg(datediff(o.order_estimated_delivery_date, o.order_approved_at))) as `Average Delivery Time` from dim_sellers s 
@@ -190,11 +221,15 @@ elif option == "Seller Performance":
 
         st.table(Delivery_eff)
 
+        logging.debug("Completed KPI in {option}")
+
 elif option == "Product Analytics":
 
     st.title(":violet[Product Performance Dashboard]")
 
     type = st.selectbox("Analysis Type ?", ("Please Select","Data mart", "Aggregration tables", "KPI"))
+
+    logging.info(f"Selected {type} in {option}")
 
     if type == "Data mart":
         query = ''' select p.product_id as `Product ID`, p.product_category as `Product Category`, round(sum(f.product_price * f.quantity)) as `Total Revenue`, count(f.order_id) as `Total Orders` from dim_products p inner join fact_main
@@ -215,6 +250,8 @@ elif option == "Product Analytics":
 
         st.plotly_chart(fig)
 
+        logging.debug("Completed Data marts in {option}")
+
     elif type == "Aggregration tables":
         query = '''select p.product_id as `Product ID`, p.product_category as `Product Category`, sum(f.product_price) as `Total Revenue`, count(distinct(f.order_id)) as `Total Orders`, sum(f.quantity) as `Total Quantity`
         from dim_products p inner join fact_main f on p.product_id = f.product_id group by p.product_id, p.product_category;'''
@@ -224,6 +261,8 @@ elif option == "Product Analytics":
         st.subheader("Top Selling Products Aggregation Table")
 
         st.table(top_prod)
+
+        logging.debug("Completed Aggregration Tables in {option}")
 
     elif type == "KPI":
         query = '''select p.product_id as `Product ID`, p.product_category as `Product Category`, round(sum(o.total_price),2) as `Total Revenue` from dim_products p inner join
@@ -235,3 +274,5 @@ elif option == "Product Analytics":
         st.subheader("Best Categories")
 
         st.table(top_5)
+
+        logging.debug("Completed KPI in {option}")
